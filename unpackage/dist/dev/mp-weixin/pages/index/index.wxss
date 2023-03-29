@@ -1,4 +1,3 @@
-@charset "UTF-8";
 /* 水平间距 */
 /* 水平间距 */
 .container {
@@ -15,8 +14,8 @@
   padding-top: 20rpx;
   overflow-y: auto;
   transition: all 0.1s ease;
-  height: calc(100vh - 88rpx - 110rpx - 25px);
-  height: calc(100vh - 88rpx - 25px);
+  height: calc(100vh - 88rpx - 110rpx - var(--status-bar-height));
+  height: calc(100vh - 88rpx - var(--status-bar-height));
 }
 .scroll .item-space {
   height: 30rpx;
@@ -43,7 +42,7 @@
   position: relative;
 }
 .scroll .item .content::before {
-  content: '';
+  content: "";
   width: 0;
   height: 0;
   border-right: 30rpx solid #FFF;
@@ -69,8 +68,7 @@
 }
 .scroll .item.right .content::before {
   right: -20rpx;
-  -webkit-transform: rotate(180deg);
-          transform: rotate(180deg);
+  transform: rotate(180deg);
   border-right: 30rpx solid #A0EA6F;
 }
 .scroll #bottom {
@@ -97,7 +95,7 @@
 }
 .input-box {
   /* position:fixed;
-		bottom:20px; */
+  bottom:20px; */
 }
 .left-face {
   height: 80rpx;
@@ -128,18 +126,6 @@
   background-color: #fffae8;
 }
 .btn-text {
-  font-size: 2ch;
+  font-size: 1ch;
   color: #4285f4;
 }
-.shift-table {
-  display: flex;
-  flex-direction: row;
-}
-.in-button {
-  width: 10rpx;
-  color: red;
-}
-.out-button {
-  flex: 1 0 auto;
-}
-

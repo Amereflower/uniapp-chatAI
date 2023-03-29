@@ -1,1 +1,1 @@
-<view class="main">still developing<button data-event-opts="{{[['tap',[['checkStroge',['$event']]]]]}}" bindtap="__e">验证缓存</button><view class="_p">{{thisismsg}}</view><button data-event-opts="{{[['tap',[['checkGetStroge',['$event']]]]]}}" bindtap="__e">{{"验证拿缓存："+strogemsg}}</button></view>
+<view class="main"> still developing <button bindtap="{{a}}">验证缓存</button><view>{{b}}</view><button bindtap="{{d}}">验证拿缓存：{{c}}</button></view>

@@ -1,4 +1,3 @@
-@charset "UTF-8";
 /* 水平间距 */
 /* 水平间距 */
 .uni-drawer {
@@ -18,23 +17,18 @@
   width: 220px;
   bottom: 0;
   background-color: #f7f7f7;
-  transition: -webkit-transform 0.3s ease;
   transition: transform 0.3s ease;
-  transition: transform 0.3s ease, -webkit-transform 0.3s ease;
 }
 .uni-drawer--left {
   left: 0;
-  -webkit-transform: translateX(-100%);
-          transform: translateX(-100%);
+  transform: translateX(-100%);
 }
 .uni-drawer--right {
   right: 0;
-  -webkit-transform: translateX(100%);
-          transform: translateX(100%);
+  transform: translateX(100%);
 }
 .uni-drawer__content--visible {
-  -webkit-transform: translateX(0px);
-          transform: translateX(0px);
+  transform: translateX(0px);
 }
 .uni-drawer__mask {
   display: block;
@@ -51,4 +45,3 @@
   display: block;
   opacity: 1;
 }
-

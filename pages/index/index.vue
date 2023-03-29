@@ -1,14 +1,7 @@
 <template>
 	<view class="container">
 		<view class="scroll" :style="{height:scrollHeight}">
-			<button @click="showDrawer" type="primary">切换对话</button>
-					<uni-drawer ref="showRight" mode="right" :mask-click="false">
-						<scroll-view style="height: 100%;" scroll-y="true">
-							<button @click="closeDrawer" type="primary">切换完成</button>
-							<view class="shift-table" v-for="item in 3" ><button class="out-button">对话{{item}}</button><button class="in-button">x</button>  </view>
-							<button>新建对话</button>
-						</scroll-view>
-					</uni-drawer>
+			<drawer ref="drawer"></drawer>
 			<scroll-view scroll-y style="height:100%" :scroll-into-view="scrollView">
 				<view v-for="(item,index) in chatMsg"  :key=index>
 					<view class="item flex-row" :class="item.position">
@@ -24,7 +17,7 @@
 		</view>
 		<view class="text-btn">
 			<view style="width: 600rpx;" >
-				<uni-easyinput class="uni-mt-5 input-box" trim="both" v-model="value" placeholder="请输入内容" type="text"  @focus="scrollToBottom":clearable="false"   >
+				<uni-easyinput class="uni-mt-5 input-box" trim="both" v-model="value" placeholder="请输入内容" type="text"  @focus="scrollToBottom" :clearable="false"   >
 				</uni-easyinput>
 			</view>
 			<view class="send-btn" hover-class="send-btn-click" @click="sendClick">
@@ -36,7 +29,11 @@
 </template>
 
 <script>
+	import drawer from '@/components/index/drawer.vue'
 	export default { 
+		components:{
+			drawer
+		},
 		data() {
 			return {
 				scrollHeight:'auto',
@@ -49,10 +46,12 @@
 						position:'left',
 						msg:"欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
 					},
-					
 				]
 				
 			}
+		},
+		onNavigationBarButtonTap(e) {
+			this.$refs.drawer.showDrawer()
 		},
 		onLoad() {
 			this.setScrollHeight()
@@ -64,21 +63,6 @@
 			})
 		},
 		methods: {
-			showDrawer() {
-							this.$refs.showRight.open();
-						},
-						closeDrawer() {
-							this.$refs.showRight.close();
-						},
-			inputFocus(e){
-				this.setScrollHeight(e.detail.height)
-				this.scrollToBottom()
-				
-				uni.onKeyboardHeightChange(res=>{
-					this.setScrollHeight(res.height)
-					this.scrollToBottom()
-				})
-			},
 			setScrollHeight(descHeight=0){
 				// #ifdef MP-WEIXIN
 				this.scrollHeight = `calc(100vh - 110rpx - ${descHeight}px)`
@@ -305,19 +289,8 @@
 		
 	}
 	.btn-text {
-		font-size: 2ch;
+		font-size: 1ch;
 		color:#4285f4 ;
 	}
-	.shift-table{
-		display: flex;
-		flex-direction: row;
-		
-	}
-	.in-button{
-		width: 10rpx;
-		color:red
-	}
-	.out-button{
-		flex:1 0 auto
-	}
+	
 </style>

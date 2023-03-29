@@ -1,0 +1,24 @@
+
+.shift-table{
+		display: flex;
+		flex-direction: row;
+}
+.in-button{
+		width: 10rpx;
+		color:red;
+		text-align: center;
+		margin-top:5rpx;
+}
+.out-button{
+		flex:1 0 auto;
+		margin-top:5rpx;
+}
+.new-button{
+		margin-top: 20rpx;
+		width: 100%;
+		background-color: #79c18a;
+		color:white
+}
+.single-chat{
+		width: 100%;
+}

@@ -4,7 +4,6 @@
     "pages/mainpage/mainpage",
     "pages/message/message"
   ],
-  "subPackages": [],
   "window": {
     "navigationBarTextStyle": "white",
     "navigationBarTitleText": "uni-app",
