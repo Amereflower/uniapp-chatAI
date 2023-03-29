@@ -1,0 +1,57 @@
+ {
+	"pages": [
+	
+		{
+			"path": "pages/index/index",
+			"style": {
+				"navigationBarTitleText": "chat"
+			}
+		},
+		{
+		"path":"pages/mainpage/mainpage",
+		"style": {
+			"navigationBarTitleText": "main",
+			"enablePullDownRefresh":true
+		}
+	},
+	{
+		"path":"pages/message/message",
+		"style": {
+			"navigationBarTitleText": "chat"
+		}
+	}
+	],
+	"globalStyle": {
+		"navigationBarTextStyle": "#fffefa",
+		"navigationBarTitleText": "uni-app",
+		"navigationBarBackgroundColor": "#41a863",
+		"backgroundColor": "#F8F8F8",
+		"app-plus": {
+			"background": "#efeff4"
+		}
+	},
+	"tabBar": {
+		"list": [
+			{
+				"text": "homepage",
+				"pagePath": "pages/mainpage/mainpage",
+				"iconPath": "static/zhuye.png",
+				"selectedIconPath": "static/zhuye.png"
+				
+			},
+			{
+				"text": "chat",
+				"pagePath": "pages/index/index",
+				"iconPath": "static/chat.png",
+				"selectedIconPath": "static/chat.png"
+			},
+			{
+				"text": "more",
+				"pagePath": "pages/message/message",
+				"iconPath": "static/more.png",
+				"selectedIconPath": "static/more.png"
+			}
+			
+		]
+	}
+}
