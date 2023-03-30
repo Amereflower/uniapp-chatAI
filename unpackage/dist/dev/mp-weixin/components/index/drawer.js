@@ -2,7 +2,31 @@
 const common_vendor = require("../../common/vendor.js");
 const _sfc_main = {
   data() {
-    return {};
+    return {
+      chatNum: []
+    };
+  },
+  created: function() {
+    this.chatNum = 1;
+    common_vendor.index.request({
+      url: "http://123.60.188.11:1655/getconverid",
+      method: "GET",
+      success: (res) => {
+        common_vendor.index.setStorage({
+          key: "chat_history",
+          data: [
+            {
+              "id": res.data,
+              "chatMsg": [{
+                position: "left",
+                msg: "欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
+              }]
+            }
+          ]
+        });
+      }
+    });
+    this.$emit("change-conver-id", 1);
   },
   methods: {
     confirmDel(cov_id) {
@@ -27,12 +51,53 @@ const _sfc_main = {
         duration: 1e3
       });
       this.$refs.showRight.close();
+      this.$emit("change-conver-id", cov_id);
     },
     showDrawer() {
       this.$refs.showRight.open();
     },
     closeDrawer() {
       this.$refs.showRight.close();
+    },
+    singleQuestion() {
+      this.$emit("single", true);
+    },
+    getConversationId() {
+      common_vendor.index.request({
+        url: "http://123.60.188.11:1655/getconverid",
+        method: "GET",
+        success: (res) => {
+          const conv_id = res.data;
+          common_vendor.index.getStorage({
+            key: "chat_history",
+            success: (response) => {
+              const chatData = response.data;
+              chatData.push({
+                "id": conv_id,
+                "chatMsg": [{
+                  position: "left",
+                  msg: "欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
+                }]
+              });
+              this.chatNum++;
+              common_vendor.index.setStorage({
+                key: "chat_history",
+                data: chatData
+              });
+            }
+          });
+        }
+      });
+      this.$refs.showRight.close();
+    },
+    checkStorage() {
+      console.log("对话总数为", this.chatNum);
+      common_vendor.index.getStorage({
+        key: "chat_history",
+        success: function(res) {
+          console.log(res.data[0].id);
+        }
+      });
     }
   }
 };
@@ -46,7 +111,7 @@ if (!Math) {
 }
 function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
   return {
-    a: common_vendor.f(5, (item, index, i0) => {
+    a: common_vendor.f($data.chatNum, (item, index, i0) => {
       return {
         a: common_vendor.t(item),
         b: common_vendor.o(($event) => $options.chooseConversation(index + 1), item),
@@ -54,8 +119,11 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
         d: item
       };
     }),
-    b: common_vendor.sr("showRight", "0c36cdf4-0"),
-    c: common_vendor.p({
+    b: common_vendor.o((...args) => $options.getConversationId && $options.getConversationId(...args)),
+    c: common_vendor.o((...args) => $options.singleQuestion && $options.singleQuestion(...args)),
+    d: common_vendor.o((...args) => $options.checkStorage && $options.checkStorage(...args)),
+    e: common_vendor.sr("showRight", "0c36cdf4-0"),
+    f: common_vendor.p({
       mode: "right",
       ["mask-click"]: false
     })

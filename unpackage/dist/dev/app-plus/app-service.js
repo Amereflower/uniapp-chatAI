@@ -1846,7 +1846,31 @@ if (uni.restoreGlobal) {
   const __easycom_0 = /* @__PURE__ */ _export_sfc(_sfc_main$5, [["render", _sfc_render$4], ["__scopeId", "data-v-f7c32d22"], ["__file", "D:/HbuilderX/HbuilderXProjects/chatGPT/uni_modules/uni-drawer/components/uni-drawer/uni-drawer.vue"]]);
   const _sfc_main$4 = {
     data() {
-      return {};
+      return {
+        chatNum: []
+      };
+    },
+    created: function() {
+      this.chatNum = 1;
+      uni.request({
+        url: "http://123.60.188.11:1655/getconverid",
+        method: "GET",
+        success: (res) => {
+          uni.setStorage({
+            key: "chat_history",
+            data: [
+              {
+                "id": res.data,
+                "chatMsg": [{
+                  position: "left",
+                  msg: "欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
+                }]
+              }
+            ]
+          });
+        }
+      });
+      this.$emit("change-conver-id", 1);
     },
     methods: {
       confirmDel(cov_id) {
@@ -1855,9 +1879,9 @@ if (uni.restoreGlobal) {
           content: `确定要删除 conversation${cov_id} 吗？`,
           success: function(res) {
             if (res.confirm) {
-              formatAppLog("log", "at components/index/drawer.vue:35", "用户点击确定");
+              formatAppLog("log", "at components/index/drawer.vue:60", "用户点击确定");
             } else if (res.cancel) {
-              formatAppLog("log", "at components/index/drawer.vue:37", "用户点击取消");
+              formatAppLog("log", "at components/index/drawer.vue:62", "用户点击取消");
             }
           }
         });
@@ -1871,12 +1895,53 @@ if (uni.restoreGlobal) {
           duration: 1e3
         });
         this.$refs.showRight.close();
+        this.$emit("change-conver-id", cov_id);
       },
       showDrawer() {
         this.$refs.showRight.open();
       },
       closeDrawer() {
         this.$refs.showRight.close();
+      },
+      singleQuestion() {
+        this.$emit("single", true);
+      },
+      getConversationId() {
+        uni.request({
+          url: "http://123.60.188.11:1655/getconverid",
+          method: "GET",
+          success: (res) => {
+            const conv_id = res.data;
+            uni.getStorage({
+              key: "chat_history",
+              success: (response) => {
+                const chatData = response.data;
+                chatData.push({
+                  "id": conv_id,
+                  "chatMsg": [{
+                    position: "left",
+                    msg: "欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
+                  }]
+                });
+                this.chatNum++;
+                uni.setStorage({
+                  key: "chat_history",
+                  data: chatData
+                });
+              }
+            });
+          }
+        });
+        this.$refs.showRight.close();
+      },
+      checkStorage() {
+        formatAppLog("log", "at components/index/drawer.vue:120", "对话总数为", this.chatNum);
+        uni.getStorage({
+          key: "chat_history",
+          success: function(res) {
+            formatAppLog("log", "at components/index/drawer.vue:124", res.data[0].id);
+          }
+        });
       }
     }
   };
@@ -1896,11 +1961,11 @@ if (uni.restoreGlobal) {
               style: { "height": "50%" },
               "scroll-y": "true"
             }, [
-              (vue.openBlock(), vue.createElementBlock(
+              (vue.openBlock(true), vue.createElementBlock(
                 vue.Fragment,
                 null,
-                vue.renderList(5, (item, index) => {
-                  return vue.createElementVNode("view", {
+                vue.renderList($data.chatNum, (item, index) => {
+                  return vue.openBlock(), vue.createElementBlock("view", {
                     class: "shift-table",
                     key: item
                   }, [
@@ -1916,17 +1981,22 @@ if (uni.restoreGlobal) {
                     }, "x", 8, ["onClick"])
                   ]);
                 }),
-                64
-                /* STABLE_FRAGMENT */
+                128
+                /* KEYED_FRAGMENT */
               )),
               vue.createElementVNode("button", {
                 size: "mini",
-                class: "new-button"
+                class: "new-button",
+                onClick: _cache[0] || (_cache[0] = (...args) => $options.getConversationId && $options.getConversationId(...args))
               }, "new conversation"),
               vue.createElementVNode("button", {
                 size: "mini",
-                class: "single-chat"
-              }, "单轮次对话")
+                class: "single-chat",
+                onClick: _cache[1] || (_cache[1] = (...args) => $options.singleQuestion && $options.singleQuestion(...args))
+              }, "单轮次对话"),
+              vue.createElementVNode("button", {
+                onClick: _cache[2] || (_cache[2] = (...args) => $options.checkStorage && $options.checkStorage(...args))
+              }, "检查缓存内容")
             ])
           ]),
           _: 1
@@ -1944,6 +2014,13 @@ if (uni.restoreGlobal) {
     },
     data() {
       return {
+        conver_id: "",
+        //用于连续对话发送到后端的哈希值id
+        chat_list_id: 0,
+        //用于从缓存中取聊天记录的第n组id（下标）
+        localurl: "http://192.168.86.54:8080",
+        severurl: "http://123.60.188.11:1655",
+        questWay: "continuous",
         scrollHeight: "auto",
         scrollView: "default",
         isFocus: false,
@@ -1977,18 +2054,49 @@ if (uni.restoreGlobal) {
           position: "right",
           msg: this.value
         });
+        const que = this.value;
+        uni.getStorage({
+          key: "chat_history",
+          success: (res) => {
+            const allData = res.data;
+            allData[this.chat_list_id - 1].chatMsg.push({
+              position: "right",
+              msg: que
+            });
+            formatAppLog("log", "at pages/index/index.vue:97", allData);
+            uni.setStorage({
+              key: "chat_history",
+              data: allData
+            });
+          }
+        });
         uni.showLoading({
           title: "思考中",
           mask: true
         });
         uni.request({
-          url: "http://123.60.188.11:1655/test",
+          url: `${this.severurl}/${this.questWay}`,
           method: "POST",
-          data: { msg: this.value },
+          data: { msg: this.value, convo_id: this.conver_id },
           success: (res) => {
             this.chatMsg.push({
               position: "left",
               msg: res.data
+            });
+            const answer = res.data;
+            uni.getStorage({
+              key: "chat_history",
+              success: (res2) => {
+                const allData = res2.data;
+                allData[this.chat_list_id - 1].chatMsg.push({
+                  position: "left",
+                  msg: answer
+                });
+                uni.setStorage({
+                  key: "chat_history",
+                  data: allData
+                });
+              }
             });
             this.scrollToBottom();
             uni.hideLoading();
@@ -1998,7 +2106,7 @@ if (uni.restoreGlobal) {
         this.value = " ";
       },
       input(e) {
-        formatAppLog("log", "at pages/index/index.vue:106", "输入内容", e);
+        formatAppLog("log", "at pages/index/index.vue:147", "输入内容", e);
       },
       scrollToBottom() {
         setTimeout(() => {
@@ -2007,6 +2115,28 @@ if (uni.restoreGlobal) {
             this.scrollView = "default";
           }, 100);
         }, 100);
+      },
+      singleQuestion(isSingle) {
+        if (isSingle) {
+          this.questWay = `single`;
+          formatAppLog("log", "at pages/index/index.vue:161", `single done${this.questWay}`);
+        } else {
+          this.questWay = `continuous`;
+          formatAppLog("log", "at pages/index/index.vue:164", `test done ${this.questWay}`);
+        }
+      },
+      changeConverId(new_id) {
+        this.chat_list_id = new_id;
+        formatAppLog("log", "at pages/index/index.vue:169", `在数组中是第${new_id}项`);
+        uni.getStorage({
+          key: "chat_history",
+          success: (res) => {
+            const nowChat = res.data[new_id - 1];
+            formatAppLog("log", "at pages/index/index.vue:174", nowChat);
+            this.conver_id = nowChat.id;
+            this.chatMsg = nowChat.chatMsg;
+          }
+        });
       }
       // setScrollHeight(descHeight=0){
       //
@@ -2029,13 +2159,11 @@ if (uni.restoreGlobal) {
           style: vue.normalizeStyle({ height: $data.scrollHeight })
         },
         [
-          vue.createVNode(
-            _component_drawer,
-            { ref: "drawer" },
-            null,
-            512
-            /* NEED_PATCH */
-          ),
+          vue.createVNode(_component_drawer, {
+            onChangeConverId: $options.changeConverId,
+            onSingle: $options.singleQuestion,
+            ref: "drawer"
+          }, null, 8, ["onChangeConverId", "onSingle"]),
           vue.createElementVNode("scroll-view", {
             "scroll-y": "",
             style: { "height": "100%" },

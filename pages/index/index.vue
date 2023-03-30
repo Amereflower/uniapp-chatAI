@@ -1,7 +1,7 @@
 <template>
 	<view class="container">
 		<view class="scroll" :style="{height:scrollHeight}">
-			<drawer ref="drawer"></drawer>
+			<drawer @change-conver-id="changeConverId"  @single="singleQuestion" ref="drawer"></drawer>
 			<scroll-view scroll-y style="height:100%" :scroll-into-view="scrollView">
 				<view v-for="(item,index) in chatMsg"  :key=index>
 					<view class="item flex-row" :class="item.position">
@@ -36,6 +36,11 @@
 		},
 		data() {
 			return {
+				conver_id:'',	//用于连续对话发送到后端的哈希值id
+				chat_list_id:0,	//用于从缓存中取聊天记录的第n组id（下标）
+				localurl:'http://192.168.86.54:8080',
+				severurl:'http://123.60.188.11:1655',
+				questWay:'continuous',
 				scrollHeight:'auto',
 				scrollView:'default',
 				isFocus:false,
@@ -80,19 +85,55 @@
 					position:'right',
 					msg:this.value,
 				})
+				const que = this.value
+				uni.getStorage({
+					key:'chat_history',
+					success:(res)=> {
+						const allData = res.data
+						allData[this.chat_list_id-1].chatMsg.push({
+							position:'right',
+							msg:que,
+						})
+						console.log(allData)
+						uni.setStorage({
+							key:'chat_history',
+							data:allData
+						})
+						
+					}
+				})
 				uni.showLoading({
 					title:"思考中",
 					mask:true,
 				})
 				uni.request({
-					url:"http://123.60.188.11:1655/test",
+					url:`${this.severurl}/${this.questWay}`,
 					method:'POST',
-					data:{msg:this.value},
+					data:{msg:this.value,convo_id:this.conver_id},
 					success:(res) => {
 						this.chatMsg.push({
 							position:'left',
 							msg:res.data,
 						})
+						const answer = res.data
+						uni.getStorage({
+							key:'chat_history',
+							success:(res)=> {
+								const allData = res.data
+								allData[this.chat_list_id-1].chatMsg.push({
+									position:'left',
+									msg:answer,
+								})
+								// console.log(allData[this.chat_list_id-1].chatMsg)
+								uni.setStorage({
+									key:'chat_history',
+									data:allData
+								})
+								
+							}
+						})
+						
+						
 						this.scrollToBottom()
 						uni.hideLoading()
 					}
@@ -113,6 +154,28 @@
 						this.scrollView = 'bottom'
 						setTimeout(()=>{this.scrollView = 'default'}, 100)
 					}, 100)
+			},
+			singleQuestion(isSingle){
+				if(isSingle){
+					this.questWay=`single`
+					console.log(`single done${this.questWay}`)
+				}else{
+					this.questWay=`continuous`
+					console.log(`test done ${this.questWay}`)
+				}
+			},
+			changeConverId(new_id){
+				this.chat_list_id = new_id
+				console.log(`在数组中是第${new_id}项`)
+				uni.getStorage({
+					key:'chat_history',
+					success:(res)=>{
+						const nowChat = res.data[new_id-1]	//对话n对应数组下标n-1
+						console.log(nowChat)
+						this.conver_id = nowChat.id
+						this.chatMsg = nowChat.chatMsg
+					}
+				})
 			}
 			// setScrollHeight(descHeight=0){
 			// 	// #ifdef MP-WEIXIN
