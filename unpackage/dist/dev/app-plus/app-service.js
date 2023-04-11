@@ -1847,30 +1847,28 @@ if (uni.restoreGlobal) {
   const _sfc_main$4 = {
     data() {
       return {
-        chatNum: []
+        chatNum: 0,
+        chooseNum: 1,
+        typeChoose: "单轮次对话",
+        isSingleOpen: false
       };
     },
     created: function() {
       this.chatNum = 1;
       uni.request({
-        url: "http://123.60.188.11:1655/getconverid",
+        url: "http://123.60.141.75:1655/getconverid",
         method: "GET",
         success: (res) => {
-          uni.setStorage({
-            key: "chat_history",
-            data: [
-              {
-                "id": res.data,
-                "chatMsg": [{
-                  position: "left",
-                  msg: "欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
-                }]
-              }
-            ]
-          });
+          uni.setStorageSync("chat_history", [{
+            "id": res.data,
+            "chatMsg": [{
+              position: "left",
+              msg: "欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
+            }]
+          }]);
+          this.$emit("change-conver-id", 1);
         }
       });
-      this.$emit("change-conver-id", 1);
     },
     methods: {
       confirmDel(cov_id) {
@@ -1879,15 +1877,25 @@ if (uni.restoreGlobal) {
           content: `确定要删除 conversation${cov_id} 吗？`,
           success: function(res) {
             if (res.confirm) {
-              formatAppLog("log", "at components/index/drawer.vue:60", "用户点击确定");
+              response = uni.getStorageSync("chat_history");
+              const chatData = response;
+              chatData.splice(cov_id - 1, 1);
+              this.chooseNum = 1;
+              uni.setStorageSync("chat_history", chatData);
+              this.chatNum--;
+              this.$emit("delete-conver", 0);
             } else if (res.cancel) {
-              formatAppLog("log", "at components/index/drawer.vue:62", "用户点击取消");
+              formatAppLog("log", "at components/index/drawer.vue:71", "用户点击取消");
             }
           }
         });
         this.$refs.showRight.close();
       },
       chooseConversation(cov_id) {
+        this.isSingleOpen = false;
+        this.$emit("single", false);
+        formatAppLog("log", "at components/index/drawer.vue:81", "点击对话的时传递的参数是" + cov_id);
+        this.chooseNum = cov_id;
         uni.showToast({
           title: `conversation${cov_id}`,
           image: "static/sucess.png",
@@ -1904,46 +1912,51 @@ if (uni.restoreGlobal) {
         this.$refs.showRight.close();
       },
       singleQuestion() {
+        this.isSingleOpen = true;
         this.$emit("single", true);
+        this.chooseNum = -1;
+        this.$refs.showRight.close();
       },
       getConversationId() {
+        let chatData;
         uni.request({
-          url: "http://123.60.188.11:1655/getconverid",
+          url: "http://123.60.141.75:1655/getconverid",
           method: "GET",
           success: (res) => {
             const conv_id = res.data;
-            uni.getStorage({
-              key: "chat_history",
-              success: (response) => {
-                const chatData = response.data;
-                chatData.push({
-                  "id": conv_id,
-                  "chatMsg": [{
-                    position: "left",
-                    msg: "欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
-                  }]
-                });
-                this.chatNum++;
-                uni.setStorage({
-                  key: "chat_history",
-                  data: chatData
-                });
-              }
+            const response2 = uni.getStorageSync("chat_history");
+            chatData = response2;
+            chatData.push({
+              "id": conv_id,
+              "chatMsg": [{
+                position: "left",
+                msg: "欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
+              }]
             });
+            this.chatNum++;
+            uni.setStorageSync("chat_history", chatData);
           }
         });
         this.$refs.showRight.close();
       },
       checkStorage() {
-        formatAppLog("log", "at components/index/drawer.vue:120", "对话总数为", this.chatNum);
-        uni.getStorage({
+        formatAppLog("log", "at components/index/drawer.vue:133", "对话总数为", this.chatNum);
+        uni.getStorageSync({
           key: "chat_history",
           success: function(res) {
-            formatAppLog("log", "at components/index/drawer.vue:124", res.data[0].id);
+            formatAppLog("log", "at components/index/drawer.vue:137", res.data[0].id);
           }
         });
+      },
+      isSelected: function(index) {
+        if (index === this.chooseNum) {
+          return true;
+        } else {
+          return false;
+        }
       }
-    }
+    },
+    computed: {}
   };
   function _sfc_render$3(_ctx, _cache, $props, $setup, $data, $options) {
     const _component_uni_drawer = resolveEasycom(vue.resolveDynamicComponent("uni-drawer"), __easycom_0);
@@ -1971,9 +1984,9 @@ if (uni.restoreGlobal) {
                   }, [
                     vue.createElementVNode("button", {
                       size: "mini",
-                      class: "out-button",
+                      class: vue.normalizeClass([{ selected: $options.isSelected(item) }, "out-button"]),
                       onClick: ($event) => $options.chooseConversation(index + 1)
-                    }, "conversation" + vue.toDisplayString(item), 9, ["onClick"]),
+                    }, "conversation" + vue.toDisplayString(item), 11, ["onClick"]),
                     vue.createElementVNode("button", {
                       size: "mini",
                       class: "in-button",
@@ -1989,11 +2002,17 @@ if (uni.restoreGlobal) {
                 class: "new-button",
                 onClick: _cache[0] || (_cache[0] = (...args) => $options.getConversationId && $options.getConversationId(...args))
               }, "new conversation"),
-              vue.createElementVNode("button", {
-                size: "mini",
-                class: "single-chat",
-                onClick: _cache[1] || (_cache[1] = (...args) => $options.singleQuestion && $options.singleQuestion(...args))
-              }, "单轮次对话"),
+              vue.createElementVNode(
+                "button",
+                {
+                  size: "mini",
+                  class: vue.normalizeClass([{ selected: $data.isSingleOpen }, "single-chat"]),
+                  onClick: _cache[1] || (_cache[1] = ($event) => $options.singleQuestion())
+                },
+                vue.toDisplayString($data.typeChoose),
+                3
+                /* TEXT, CLASS */
+              ),
               vue.createElementVNode("button", {
                 onClick: _cache[2] || (_cache[2] = (...args) => $options.checkStorage && $options.checkStorage(...args))
               }, "检查缓存内容")
@@ -2019,19 +2038,17 @@ if (uni.restoreGlobal) {
         chat_list_id: 0,
         //用于从缓存中取聊天记录的第n组id（下标）
         localurl: "http://192.168.86.54:8080",
-        severurl: "http://123.60.188.11:1655",
+        severurl: "http://123.60.141.75:1655",
         questWay: "continuous",
         scrollHeight: "auto",
         scrollView: "default",
         isFocus: false,
         content: "",
         value: "",
-        chatMsg: [
-          {
-            position: "left",
-            msg: "欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
-          }
-        ]
+        chatMsg: [{
+          position: "left",
+          msg: "欢迎使用chatGPT聊天机器人，我是AI，开始使用吧！"
+        }]
       };
     },
     onNavigationBarButtonTap(e) {
@@ -2054,22 +2071,6 @@ if (uni.restoreGlobal) {
           position: "right",
           msg: this.value
         });
-        const que = this.value;
-        uni.getStorage({
-          key: "chat_history",
-          success: (res) => {
-            const allData = res.data;
-            allData[this.chat_list_id - 1].chatMsg.push({
-              position: "right",
-              msg: que
-            });
-            formatAppLog("log", "at pages/index/index.vue:97", allData);
-            uni.setStorage({
-              key: "chat_history",
-              data: allData
-            });
-          }
-        });
         uni.showLoading({
           title: "思考中",
           mask: true
@@ -2077,26 +2078,14 @@ if (uni.restoreGlobal) {
         uni.request({
           url: `${this.severurl}/${this.questWay}`,
           method: "POST",
-          data: { msg: this.value, convo_id: this.conver_id },
+          data: {
+            msg: this.value,
+            session_id: this.conver_id
+          },
           success: (res) => {
             this.chatMsg.push({
               position: "left",
               msg: res.data
-            });
-            const answer = res.data;
-            uni.getStorage({
-              key: "chat_history",
-              success: (res2) => {
-                const allData = res2.data;
-                allData[this.chat_list_id - 1].chatMsg.push({
-                  position: "left",
-                  msg: answer
-                });
-                uni.setStorage({
-                  key: "chat_history",
-                  data: allData
-                });
-              }
             });
             this.scrollToBottom();
             uni.hideLoading();
@@ -2105,9 +2094,9 @@ if (uni.restoreGlobal) {
         this.scrollToBottom();
         this.value = " ";
       },
-      input(e) {
-        formatAppLog("log", "at pages/index/index.vue:147", "输入内容", e);
-      },
+      // input(e) {
+      // 	__f__('log','at pages/index/index.vue:116',"输入内容", e)
+      // },
       scrollToBottom() {
         setTimeout(() => {
           this.scrollView = "bottom";
@@ -2119,25 +2108,33 @@ if (uni.restoreGlobal) {
       singleQuestion(isSingle) {
         if (isSingle) {
           this.questWay = `single`;
-          formatAppLog("log", "at pages/index/index.vue:161", `single done${this.questWay}`);
+          formatAppLog("log", "at pages/index/index.vue:130", `single done${this.questWay}`);
         } else {
           this.questWay = `continuous`;
-          formatAppLog("log", "at pages/index/index.vue:164", `test done ${this.questWay}`);
+          formatAppLog("log", "at pages/index/index.vue:133", `test done ${this.questWay}`);
         }
       },
       changeConverId(new_id) {
+        formatAppLog("log", "at pages/index/index.vue:137", "shei zai limian");
+        formatAppLog("log", "at pages/index/index.vue:139", `new_id is ${new_id}`);
+        formatAppLog("log", "at pages/index/index.vue:140", `old_id is ${this.chat_list_id}`);
+        if (this.chat_list_id === new_id) {
+          return;
+        } else if (this.chat_list_id === 0) {
+          this.chat_list_id = 1;
+        } else {
+          const response2 = uni.getStorageSync("chat_history");
+          const allData = response2;
+          allData[this.chat_list_id - 1].chatMsg = this.chatMsg;
+          uni.setStorageSync("chat_history", allData);
+        }
         this.chat_list_id = new_id;
-        formatAppLog("log", "at pages/index/index.vue:169", `在数组中是第${new_id}项`);
-        uni.getStorage({
-          key: "chat_history",
-          success: (res) => {
-            const nowChat = res.data[new_id - 1];
-            formatAppLog("log", "at pages/index/index.vue:174", nowChat);
-            this.conver_id = nowChat.id;
-            this.chatMsg = nowChat.chatMsg;
-          }
-        });
-      }
+        formatAppLog("log", "at pages/index/index.vue:154", `新的对话在数组中是第${new_id}项`);
+        const resp = uni.getStorageSync("chat_history");
+        const nowChat = resp[new_id - 1];
+        this.conver_id = nowChat.id;
+        this.chatMsg = nowChat.chatMsg;
+      },
       // setScrollHeight(descHeight=0){
       //
       //
@@ -2145,6 +2142,18 @@ if (uni.restoreGlobal) {
       //
       //
       // },
+      //难道是同时触发delete吗
+      deleteConver() {
+      },
+      showStorage() {
+        uni.getStorage({
+          key: "chat_history",
+          success: (res) => {
+            formatAppLog("log", "at pages/index/index.vue:194", "当前缓存是");
+            formatAppLog("log", "at pages/index/index.vue:195", res.data);
+          }
+        });
+      }
     }
   };
   function _sfc_render$2(_ctx, _cache, $props, $setup, $data, $options) {
@@ -2160,10 +2169,11 @@ if (uni.restoreGlobal) {
         },
         [
           vue.createVNode(_component_drawer, {
+            onDeleteConver: $options.deleteConver,
             onChangeConverId: $options.changeConverId,
             onSingle: $options.singleQuestion,
             ref: "drawer"
-          }, null, 8, ["onChangeConverId", "onSingle"]),
+          }, null, 8, ["onDeleteConver", "onChangeConverId", "onSingle"]),
           vue.createElementVNode("scroll-view", {
             "scroll-y": "",
             style: { "height": "100%" },
@@ -2208,6 +2218,10 @@ if (uni.restoreGlobal) {
               128
               /* KEYED_FRAGMENT */
             )),
+            vue.createElementVNode("button", {
+              onClick: _cache[0] || (_cache[0] = (...args) => $options.showStorage && $options.showStorage(...args)),
+              style: { "margin-bottom": "500rpx" }
+            }, "查看缓存"),
             vue.createElementVNode("view", { id: "bottom" })
           ], 8, ["scroll-into-view"])
         ],
@@ -2220,7 +2234,7 @@ if (uni.restoreGlobal) {
             class: "uni-mt-5 input-box",
             trim: "both",
             modelValue: $data.value,
-            "onUpdate:modelValue": _cache[0] || (_cache[0] = ($event) => $data.value = $event),
+            "onUpdate:modelValue": _cache[1] || (_cache[1] = ($event) => $data.value = $event),
             placeholder: "请输入内容",
             type: "text",
             onFocus: $options.scrollToBottom,
@@ -2230,7 +2244,7 @@ if (uni.restoreGlobal) {
         vue.createElementVNode("view", {
           class: "send-btn",
           "hover-class": "send-btn-click",
-          onClick: _cache[1] || (_cache[1] = (...args) => $options.sendClick && $options.sendClick(...args))
+          onClick: _cache[2] || (_cache[2] = (...args) => $options.sendClick && $options.sendClick(...args))
         }, [
           vue.createVNode(_component_uni_icons, {
             type: "paperplane-filled",

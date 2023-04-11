@@ -3,13 +3,14 @@ const common_vendor = require("../../common/vendor.js");
 const _sfc_main = {
   data() {
     return {
-      chatNum: []
+      chatNum: 0,
+      chooseNum: 1
     };
   },
   created: function() {
     this.chatNum = 1;
     common_vendor.index.request({
-      url: "http://123.60.188.11:1655/getconverid",
+      url: "http://123.60.141.75:1655/getconverid",
       method: "GET",
       success: (res) => {
         common_vendor.index.setStorage({
@@ -35,7 +36,22 @@ const _sfc_main = {
         content: `确定要删除 conversation${cov_id} 吗？`,
         success: function(res) {
           if (res.confirm) {
-            console.log("用户点击确定");
+            common_vendor.index.getStorage({
+              key: "chat_history",
+              success: (res2) => {
+                const chatData = res2.data;
+                console.log(chatData);
+                chatData.splice(cov_id - 1, 1);
+                console.log(chatData);
+                this.chooseNum = 1;
+                common_vendor.index.setStorage({
+                  key: "chat_history",
+                  data: chatData
+                });
+                this.chatNum--;
+              }
+            });
+            this.$emit("delete-conver", 0);
           } else if (res.cancel) {
             console.log("用户点击取消");
           }
@@ -44,6 +60,7 @@ const _sfc_main = {
       this.$refs.showRight.close();
     },
     chooseConversation(cov_id) {
+      this.chooseNum = cov_id;
       common_vendor.index.showToast({
         title: `conversation${cov_id}`,
         image: "static/sucess.png",
@@ -64,7 +81,7 @@ const _sfc_main = {
     },
     getConversationId() {
       common_vendor.index.request({
-        url: "http://123.60.188.11:1655/getconverid",
+        url: "http://123.60.141.75:1655/getconverid",
         method: "GET",
         success: (res) => {
           const conv_id = res.data;
@@ -98,8 +115,16 @@ const _sfc_main = {
           console.log(res.data[0].id);
         }
       });
+    },
+    isSelected: function(index) {
+      if (index === this.chooseNum) {
+        return true;
+      } else {
+        return false;
+      }
     }
-  }
+  },
+  computed: {}
 };
 if (!Array) {
   const _easycom_uni_drawer2 = common_vendor.resolveComponent("uni-drawer");
@@ -114,9 +139,10 @@ function _sfc_render(_ctx, _cache, $props, $setup, $data, $options) {
     a: common_vendor.f($data.chatNum, (item, index, i0) => {
       return {
         a: common_vendor.t(item),
-        b: common_vendor.o(($event) => $options.chooseConversation(index + 1), item),
-        c: common_vendor.o(($event) => $options.confirmDel(index + 1), item),
-        d: item
+        b: $options.isSelected(item) ? 1 : "",
+        c: common_vendor.o(($event) => $options.chooseConversation(index + 1), item),
+        d: common_vendor.o(($event) => $options.confirmDel(index + 1), item),
+        e: item
       };
     }),
     b: common_vendor.o((...args) => $options.getConversationId && $options.getConversationId(...args)),

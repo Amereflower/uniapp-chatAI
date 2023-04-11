@@ -665,28 +665,31 @@
   opacity: 1;
 }
 
-.shift-table[data-v-57831c01]{
+.shift-table[data-v-57831c01] {
 		display: flex;
 		flex-direction: row;
 }
-.in-button[data-v-57831c01]{
+.in-button[data-v-57831c01] {
 		width: 0.3125rem;
-		color:red;
+		color: red;
 		text-align: center;
-		margin-top:0.15625rem;
+		margin-top: 0.15625rem;
 }
-.out-button[data-v-57831c01]{
-		flex:1 0 auto;
-		margin-top:0.15625rem;
+.out-button[data-v-57831c01] {
+		flex: 1 0 auto;
+		margin-top: 0.15625rem;
 }
-.new-button[data-v-57831c01]{
+.new-button[data-v-57831c01] {
 		margin-top: 0.625rem;
 		width: 100%;
 		background-color: #79c18a;
-		color:white
+		color: white
 }
-.single-chat[data-v-57831c01]{
+.single-chat[data-v-57831c01] {
 		width: 100%;
+}
+.selected[data-v-57831c01] {
+		background-color: #79c18a;
 }
 
 /* 水平间距 */

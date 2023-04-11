@@ -22,3 +22,6 @@
 .single-chat{
 		width: 100%;
 }
+.selected{
+		background-color: #79c18a;
+}
